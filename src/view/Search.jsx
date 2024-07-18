@@ -1,8 +1,9 @@
 import styled from "styled-components";
 // const puppeteer = require('puppeteer');
+import SearchBtn from "./img/SearchBtn.png"
 import Footer from "./Footer";
 import Header from "./Header";
-import puppeteer from "puppeteer";
+import { useState } from "react";
 
 const Search = () => {
 
@@ -10,12 +11,72 @@ const Search = () => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px black solid;
   margin: 0px;
   width: 430px;
   height: 932px;
 `
+  const Main = styled.div`
+    padding-top: 8vh;
 
+    padding-bottom: 8vh;
+
+    > form {
+      background-color: #00DC82;
+      height: 13vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      > input {
+        width: 85%;
+        height: 6vh;
+      }
+      > input::placeholder{
+        font-size: 20px;
+      }
+      > button {
+        border: none;
+        border-radius: 10px;
+        background-color: #00DC82;
+        position: absolute;
+        right: 8%;
+        height: 5vh;
+        width: 13%;
+        margin-right: 2%;
+      }
+    }
+  `
+  const Main2 = styled.div`
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    > div {
+      display: flex;
+      width: 90%;
+      
+      >div:nth-child(2){
+          margin-left: 10px;
+      }
+
+      > div:nth-child(2) > div > p{
+        color: #a09f9f;
+        font-size: 15px;
+      }
+      > div {
+        padding-bottom: 20px;
+        border-bottom: 1px solid #b5b5b5;
+        margin-top: 20px;
+      }
+    }
+    
+    img {
+      width: 115px;
+      border-radius: 20px;
+    }
+
+  `
 //     const deselectedOptions = [
 //         "말이 쑥쑥 자라나는 그림책 육아",
 // "말이 쑥쑥 자라나는 그림책 육아",
@@ -4702,35 +4763,89 @@ const Search = () => {
 // "연필 스케치 마스터 컬렉션",
 
 //     ]
-  fetch("http://10.56.148.81:8080/books").then(res => res.json()).then(res => console.log(res))
-  
+// let Dataarr;
+const [Dataarr , setData] = useState()
+const [reload , setreload] = useState(0);
+  // fetch("http://10.56.148.81:8080/book/1").then(res => res.json()).then(res => console.log(res))
+  // const findurl = async () => {
+  //   await fetch("http://127.0.0.1:5000/crawl").then(res => res.json()).then(res => Imgurl = res)
+  //   console.log(Imgurl);
+  //   Imgurl = [...Imgurl]
+  //   Imgurl.forEach(elements => {
+  //     Img = elements.image
+  //     console.log(Img);  
+  //     document.querySelector(".imgName").setAttribute("src", Img)
+  //   });
+  // }
 
-  const clo = (async () => {
-    // 브라우저를 시작합니다.
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    
-    // 대상 웹페이지로 이동합니다.
-    await page.goto('https://read365.edunet.net/SearchDetail?bookKey=53315858&speciesKey=53176659&provCode=B10&neisCode=B100000589&schoolName=%EC%84%9C%EC%9A%B8%EB%94%94%EC%A7%80%ED%85%8D%EA%B3%A0%EB%93%B1%ED%95%99%EA%B5%90&fromSchool=true', { waitUntil: 'networkidle2' });
-    
-    // 필요한 데이터를 추출합니다.
-    const data = await page.evaluate(() => {
-      // Vue.js로 생성된 콘텐츠를 선택합니다.
-      const elements = document.querySelectorAll('.li-r');
-      return Array.from(elements).map(element => element.textContent);
-    });
-    
-    console.log(data);
-    
-    // 브라우저를 종료합니다.
-    await browser.close();
-  })();
-  clo()
+  const sendDataToServer = async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      bookname: document.querySelector(".bookname").value // 예시 한글 데이터
+    };
+  
+    try {
+      const response = await fetch('http://127.0.0.1:5000/find', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+        body: JSON.stringify(formData)
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      console.log('Data from server:', data);
+      setData(data)
+      console.log(Dataarr);
+      setreload(reload + 1);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  // Rentbook()
+  // findurl()
     return (
       <>
         <Body>
                 <Header></Header>
+                  <Main>
+                    <form action="#" onSubmit={sendDataToServer}>
+                      <input type="text" className="bookname" name="bookname" placeholder="검색" />
+                      <button type="submit"><img src={SearchBtn} alt="#" /></button>
+                    </form>
+                      <Main2>
 
+                        {
+                          Dataarr ? Dataarr.data.map((item , idx) => 
+                            { 
+                              return ( 
+                                <div key={idx}>
+                                  <div>
+                                    <img src={item.BookImgurl} alt="#" /> 
+                                  </div>
+                                  <div>
+                                    <p>{item.BookTitle}</p>
+                                    <div>
+                                      {/* {console.log(item.BookText[0].idx)} */}
+                                      <p>저자 : {item.BookText[0].idx}</p> 
+                                      <p>출판사 : {item.BookText[1].idx}</p>
+                                      <p>출판년도 : {item.BookText[2].idx} </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            }) : console.log(Dataarr)
+                            
+                        }
+                        
+                        
+                      </Main2>  
+                  </Main>
                 <Footer></Footer>
         </Body>
       </>
